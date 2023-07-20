@@ -5,6 +5,7 @@ import { Message } from "../types/ChatType";
 const socket = io("http://localhost:5500");
 
 const ChatClient = () => {
+  // const [socket, setSocket] = useState<any>(null);
   const [room, setRoom] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [messageText, setMessageText] = useState<string>("");
@@ -15,7 +16,7 @@ const ChatClient = () => {
   const [isSend, setIsSend] = useState<boolean>(false);
 
   useEffect(() => {
-    socket.emit("findAllChat", { room: room }, (rs: Message[]) => {
+    socket?.emit("findAllChat", { room: room }, (rs: Message[]) => {
       setMessages(rs);
     });
   });
@@ -23,8 +24,8 @@ const ChatClient = () => {
   useEffect(() => {
     if (isSend) {
       // Listen event from server
-      socket.on("message", (msg: Message) => {
-        setMessages([...messages, msg]);
+      socket?.on("message", (msg: Message) => {
+        console.log("Message:", msg);
       });
 
       setIsSend(false);
@@ -32,22 +33,26 @@ const ChatClient = () => {
   }, [isSend]);
 
   useEffect(() => {
-    socket.on("typing", ({ name, isTyping }) => {
-      if (isTyping) {
-        setTypingDisplay(`${name} is typing...`);
-      } else {
-        setTypingDisplay("");
-        setIsTyping(false);
+    socket?.on(
+      "typing",
+      ({ name, isTyping }: { name: string; isTyping: boolean }) => {
+        if (isTyping) {
+          setTypingDisplay(`${name} is typing...`);
+        } else {
+          setTypingDisplay("");
+          setIsTyping(false);
+        }
       }
-    });
+    );
   }, [isTyping]);
 
   const join = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    socket.emit("join", { name: name, room: room }, (rs: any) => {
+    setJoined(true);
+
+    socket?.emit("join", { name: name, room: room }, (rs: any) => {
       console.log("Joined:", rs);
-      setJoined(true);
     });
   };
 
@@ -55,7 +60,7 @@ const ChatClient = () => {
     e.preventDefault();
     setIsSend(true);
 
-    socket.emit(
+    socket?.emit(
       "createChat",
       { name: name, text: messageText, room: room },
       (rs: Message) => {
@@ -67,11 +72,11 @@ const ChatClient = () => {
 
   const emitTyping = () => {
     let timeout;
-    socket.emit("typing", { isTyping: true, room: room });
+    socket?.emit("typing", { isTyping: true, room: room });
     setIsTyping(true);
 
     timeout = setTimeout(() => {
-      socket.emit("typing", { isTyping: false });
+      socket?.emit("typing", { isTyping: false });
       setIsTyping(false);
     }, 2000);
   };
